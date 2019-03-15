@@ -4,10 +4,12 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "bluebird": "^3.5.3",
+    "axios": "0.18.0",
+    "ejs": "^2.6.1",
+    "fs-extra": "^7.0.1",
     "koa": "^2.7.0",
-    "request": "^2.88.0",
-    "sha1": "^1.1.1"
+    "raw-body": "^2.3.3",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {},
   "scripts": {
