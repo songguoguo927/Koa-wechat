@@ -3,17 +3,16 @@
 const Koa = require("koa");
 const app = new Koa();
 const wechat = require("./wechat/wechat");
-// const config = require('./config')
+
 const config = {
   wechat: {
-    appID: "wx68a4e993aa4ac1d5", //公众号里面取
-    AppSecret: "caa0bf4d5db9836b88479b63b0fbfe93", //公众号里面取
-    token: "zidingyitoken" //自定义的token
+    appID: "wx68a4e993aa4ac1d5",
+    AppSecret: "caa0bf4d5db9836b88479b63b0fbfe93", 
+    token: "zidingyitoken" 
   }
 };
 app.use(
   wechat(config, async (message, ctx) => {
-    // TODO
     // examples-学我说话
     if (message.MsgType === "event" && message.Event === "subscribe") {
       return "感谢您关注XJM的测试号";

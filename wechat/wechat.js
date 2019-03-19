@@ -28,7 +28,7 @@ function parseXML(xml) {
     );
   });
 }
-
+//被动回复消息模板
 const tpl = `
 <xml>
   <ToUserName><![CDATA[<%-toUsername%>]]></ToUserName>
@@ -73,9 +73,15 @@ const tpl = `
   <Content><![CDATA[<%-content%>]]></Content>
   <% } %>
 </xml>`;
+/**
+ * 如果你之前没用过ejs现在只需要记住下面这几个语法，以及ejs.compile()方法
 
+1，<% code %>：运行 JavaScript 代码，不输出
+2，<%= code %>：显示转义后的 HTML内容
+3，<%- code %>：显示原始 HTML 内容
+ */
 // ejs编译
-const compiled = ejs.compile(tpl);
+const compiled = ejs.compile(tpl);//后续给compiled传递对象就能编译成 xml格式返回给用户/或开发者输出json便以查看
 
 //消息回复
 function reply(content, fromUsername, toUsername) {
