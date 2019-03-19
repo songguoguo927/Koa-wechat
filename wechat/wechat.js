@@ -1,28 +1,32 @@
 //wechat.js用来处理与微信的交互
-'use strict'
+"use strict";
 
-const crypto = require('crypto')
-const getRawBody = require('raw-body')
-const xml2js = require('xml2js')
-const ejs = require('ejs')
+const crypto = require("crypto");
+const getRawBody = require("raw-body");
+const xml2js = require("xml2js");
+const ejs = require("ejs");
 //签名生成
 function getSignature(timestamp, nonce, token) {
-  let hash = crypto.createHash('sha1')
-  const arr = [token, timestamp, nonce].sort()
-  hash.update(arr.join(''))
-  return hash.digest('hex')
+  let hash = crypto.createHash("sha1");
+  const arr = [token, timestamp, nonce].sort();
+  hash.update(arr.join(""));
+  return hash.digest("hex");
 }
 
 //xml转json
 function parseXML(xml) {
   return new Promise((resolve, reject) => {
-    xml2js.parseString(xml, { trim: true, explicitArray: false, ignoreAttrs: true }, function (err, result) {
-      if (err) {
-        return reject(err)
+    xml2js.parseString(
+      xml,
+      { trim: true, explicitArray: false, ignoreAttrs: true },
+      function(err, result) {
+        if (err) {
+          return reject(err);
+        }
+        resolve(result.xml);
       }
-      resolve(result.xml)
-    })
-  })
+    );
+  });
 }
 
 const tpl = `
@@ -68,65 +72,69 @@ const tpl = `
   <% } else { %>
   <Content><![CDATA[<%-content%>]]></Content>
   <% } %>
-</xml>`
+</xml>`;
 
 // ejs编译
-const compiled = ejs.compile(tpl)
+const compiled = ejs.compile(tpl);
 
 //消息回复
 function reply(content, fromUsername, toUsername) {
-  var info = {}
-  var type = 'text'
-  info.content = content || ''
+  var info = {};
+  var type = "text";
+  info.content = content || "";
   if (Array.isArray(content)) {
-    type = 'news'
-  } else if (typeof content === 'object') {
-    if (content.hasOwnProperty('type')) {
-      type = content.type
-      info.content = content.content
+    type = "news";
+  } else if (typeof content === "object") {
+    if (content.hasOwnProperty("type")) {
+      type = content.type;
+      info.content = content.content;
     } else {
-      type = 'music'
+      type = "music";
     }
   }
-  info.msgType = type
-  info.createTime = new Date().getTime()
-  info.toUsername = toUsername
-  info.fromUsername = fromUsername
-  return compiled(info)
+  info.msgType = type;
+  info.createTime = new Date().getTime();
+  info.toUsername = toUsername;
+  info.fromUsername = fromUsername;
+  return compiled(info);
 }
 
 function wechat(config, handle) {
   return async (ctx, next) => {
-    const { signature, timestamp, nonce, echostr } = ctx.query
-    const TOKEN = config.wechat.token
-    if (ctx.method === 'GET') {
+    const { signature, timestamp, nonce, echostr } = ctx.query;
+    const TOKEN = config.wechat.token;
+    if (ctx.method === "GET") {
       if (signature === getSignature(timestamp, nonce, TOKEN)) {
-        return ctx.body = echostr
+        return (ctx.body = echostr);
       }
-      ctx.status = 401
-      ctx.body = 'Invalid signature'
-    } else if (ctx.method === 'POST') {
+      ctx.status = 401;
+      ctx.body = "Invalid signature";
+    } else if (ctx.method === "POST") {
       if (signature !== getSignature(timestamp, nonce, TOKEN)) {
-        ctx.status = 401
-        return ctx.body = 'Invalid signature'
+        ctx.status = 401;
+        return (ctx.body = "Invalid signature");
       }
       // 取原始数据
       const xml = await getRawBody(ctx.req, {
         length: ctx.request.length,
-        limit: '1mb',
-        encoding: ctx.request.charset || 'utf-8'
-      })
-      const formatted = await parseXML(xml)
+        limit: "1mb",
+        encoding: ctx.request.charset || "utf-8"
+      });
+      const formatted = await parseXML(xml);
       // 业务逻辑处理handle
-      const content = await handle(formatted, ctx)
+      const content = await handle(formatted, ctx);
       if (!content) {
-        return ctx.body = 'success'
+        return (ctx.body = "success");
       }
-      const replyMessageXml = reply(content, formatted.ToUserName, formatted.FromUserName)
-      ctx.type = 'application/xml'
-      return ctx.body = replyMessageXml
+      const replyMessageXml = reply(
+        content,
+        formatted.ToUserName,
+        formatted.FromUserName
+      );
+      ctx.type = "application/xml";
+      return (ctx.body = replyMessageXml);
     }
-  }
+  };
 }
 
-module.exports = wechat
+module.exports = wechat;
